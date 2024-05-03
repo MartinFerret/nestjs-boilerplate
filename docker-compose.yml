@@ -1,0 +1,53 @@
+version: "3.8"
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD}
+      MYSQL_DATABASE: ${DATABASE_NAME}
+      MYSQL_USER: ${DATABASE_USERNAME}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - adminer-network
+      - backend_network
+
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+    depends_on:
+      - mysql
+    networks:
+      - adminer-network
+      - backend_network
+
+  redis:
+    container_name: redis-db
+    image: redis
+    environment:
+      - REDIS_PORT=6379
+    ports:
+      - "6379:6379"
+    networks:
+      - backend_network
+    restart: unless-stopped
+    volumes:
+      - redis:/data
+
+volumes:
+  mysql-data:
+  redis:
+    driver: local
+
+networks:
+  adminer-network:
+  backend_network:
+    driver: bridge
