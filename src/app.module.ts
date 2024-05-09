@@ -7,9 +7,11 @@ import { CacheModule } from "@nestjs/cache-manager";
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import * as redisStore from "cache-manager-redis-store";
+import { TerminusModule } from '@nestjs/terminus';
+import { HealthModule } from './health/health.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(),CacheModule.register({ isGlobal: true,
+  imports: [ConfigModule.forRoot(), TerminusModule,CacheModule.register({ isGlobal: true,
     store: redisStore,
     host: process.env.REDIS_HOST,
     port: Number(process.env.REDIS_HOST), }),
@@ -22,7 +24,7 @@ import * as redisStore from "cache-manager-redis-store";
     database: process.env.DATABASE_NAME,
     autoLoadEntities: true,
     synchronize: true,
-    }), UsersModule, AuthModule
+    }), UsersModule, AuthModule, HealthModule
   ],
   controllers: [],
   providers: [AppService],

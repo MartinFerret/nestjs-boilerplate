@@ -9,7 +9,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Routes definition')
     .setDescription('The cats API description')
-    .setVersion('1.0')
+    .setVersion(process.env.API_VERSION)
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
