@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppService } from "./app.service";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { ConfigModule } from "@nestjs/config";
@@ -9,9 +9,38 @@ import { AuthModule } from './auth/auth.module';
 import * as redisStore from "cache-manager-redis-store";
 import { TerminusModule } from '@nestjs/terminus';
 import { HealthModule } from './health/health.module';
+import { LoggerModule } from 'nestjs-pino';
+import { CORRELATION_ID_HEADER, CorrelationIdMiddleware } from './correlation-id/correlation-id.middleware';
 
 @Module({
-  imports: [ConfigModule.forRoot(), TerminusModule,CacheModule.register({ isGlobal: true,
+  imports: [ConfigModule.forRoot(), LoggerModule.forRoot({
+    pinoHttp: {
+      transport: {
+        target: 'pino-pretty',
+        options: {
+          translateTime: 'HH:MM:ss Z',
+          ignore: 'pid,hostname',
+          messageKey: 'message'
+        },
+      },
+      messageKey: 'message',
+      customProps: (req) => {
+        return {
+          correlation:  req.headers[CORRELATION_ID_HEADER],
+        }
+      },
+      autoLogging: false,
+      serializers: {
+        req: () => {
+          return undefined;
+        },
+        res: () => {
+          return undefined;
+        }
+      }
+
+    }
+  }), TerminusModule,CacheModule.register({ isGlobal: true,
     store: redisStore,
     host: process.env.REDIS_HOST,
     port: Number(process.env.REDIS_HOST), }),
@@ -29,4 +58,8 @@ import { HealthModule } from './health/health.module';
   controllers: [],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+  }
+}

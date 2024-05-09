@@ -2,10 +2,11 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Logger } from 'nestjs-pino';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService, private logger: Logger) {}
 
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
@@ -14,6 +15,7 @@ export class UsersController {
 
   @Get()
   findAll() {
+    this.logger.log('Finding users...');
     return this.usersService.findAll();
   }
 
